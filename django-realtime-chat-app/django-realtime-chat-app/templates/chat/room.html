@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h4 class="mb-1">People</h4>
+                <small class="text-muted">Switch conversations</small>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for user in sidebar_users %}
+                    <a href="{% url 'chat:room' user.username %}" class="list-group-item list-group-item-action {% if user.username == other_user.username %}active{% endif %}">
+                        {{ user.username }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8 col-xl-9">
+        <div class="card border-0 shadow-sm rounded-4 chat-shell">
+            <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">{{ other_user.username }}</h4>
+                    <small id="presence-text" class="text-muted">
+                        {% if presence and presence.is_online %}Online{% else %}Offline{% endif %}
+                    </small>
+                </div>
+                <span class="status-dot {% if presence and presence.is_online %}online{% else %}offline{% endif %}" id="presence-dot"></span>
+            </div>
+            <div class="card-body chat-body" id="chat-log">
+                {% for message in messages %}
+                    <div class="message-row {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                        <div class="message-bubble">
+                            <div>{{ message.content }}</div>
+                            <div class="message-meta">{{ message.created_at|date:'d M Y, h:i A' }}</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted text-center mt-5">No messages yet. Start the conversation.</p>
+                {% endfor %}
+            </div>
+            <div class="px-4 pb-2"><small id="typing-indicator" class="text-muted"></small></div>
+            <div class="card-footer bg-white border-0 p-4">
+                <form id="chat-form" class="d-flex gap-2">
+                    <input id="chat-message-input" type="text" class="form-control" placeholder="Type a message..." autocomplete="off">
+                    <button class="btn btn-primary px-4" type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.chatConfig = {
+    currentUser: "{{ request.user.username }}",
+    otherUser: "{{ other_user.username }}",
+    roomName: "{{ request.user.username|lower }}_{{ other_user.username|lower }}".split('_').sort().join('_')
+};
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

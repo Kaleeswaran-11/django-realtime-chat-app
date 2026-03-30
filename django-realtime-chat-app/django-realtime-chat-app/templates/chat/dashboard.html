@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+{% block title %}Dashboard | RealtimeChat{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h3 class="mb-1">Conversations</h3>
+                <p class="text-muted mb-0">Choose a user to start live messaging.</p>
+            </div>
+            <div class="card-body p-0">
+                {% if user_cards %}
+                    <div class="list-group list-group-flush">
+                        {% for item in user_cards %}
+                            <a href="{% url 'chat:room' item.user.username %}" class="list-group-item list-group-item-action px-4 py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="status-dot {% if item.presence and item.presence.is_online %}online{% else %}offline{% endif %}"></span>
+                                            <strong>{{ item.user.username }}</strong>
+                                            <small class="text-muted">{% if item.presence and item.presence.is_online %}Online{% else %}Offline{% endif %}</small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            {% if item.latest_message %}
+                                                {{ item.latest_message.sender.username }}: {{ item.latest_message.content|truncatechars:40 }}
+                                            {% else %}
+                                                No messages yet.
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    {% if item.unread_count > 0 %}
+                                        <span class="badge rounded-pill text-bg-danger">{{ item.unread_count }}</span>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-muted">No other users found. Create demo users using the seed command.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">Notifications</h4>
+                    <small class="text-muted">Unread alerts</small>
+                </div>
+                <span id="notification-badge" class="badge text-bg-primary rounded-pill">{{ total_unread_notifications }}</span>
+            </div>
+            <div class="card-body px-4" id="notification-list">
+                {% for notification in notifications %}
+                    <div class="notification-item border-bottom pb-2 mb-2">
+                        <strong>{{ notification.message.sender.username }}</strong>
+                        <div class="small text-muted">{{ notification.message.content|truncatechars:60 }}</div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-0">No unread notifications.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.currentUsername = "{{ request.user.username }}";
+</script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
